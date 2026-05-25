@@ -279,31 +279,32 @@
 
         async function ambilDataDariServer() {
             try {
-                // PASTIKAN IP INI SESUAI DENGAN LAPTOP KAMU
-                const response = await fetch('http://localhost:3000/api/get-sensor');
+                // PASTIKAN INI MENGGUNAKAN URL NETLIFY MILIKMU
+                const response = await fetch('https://NAMA-WEB-KAMU.netlify.app/.netlify/functions/api/get-sensor');
                 if (!response.ok) throw new Error("Gagal terhubung ke API");
-                const data = await response.json();
+                
+                const arrayData = await response.json(); // Sekarang menerima Array 20 data
 
-                if (data && data.suhu && data.suhu !== 0) {
+                // Jika array memiliki isi
+                if (arrayData && arrayData.length > 0) {
                     waktuTerakhirUpdate = Date.now();
-                    const isDataBaru = dataHistori.length === 0 || dataHistori[dataHistori.length - 1].timestamp !== data.waktu_update;
 
-                    if (isDataBaru) {
-                        dataHistori.push({
-                            timestamp: data.waktu_update || new Date().toLocaleTimeString(),
-                            ruangan: data.ruangan,
-                            suhu: parseFloat(data.suhu),
-                            kelembapan: parseFloat(data.kelembapan)
-                        });
+                    // Timpa data lokal dengan data utuh dari database
+                    dataHistori = arrayData.map(item => ({
+                        timestamp: item.waktu_update,
+                        ruangan: item.ruangan,
+                        suhu: parseFloat(item.suhu),
+                        kelembapan: parseFloat(item.kelembapan)
+                    }));
 
-                        if (dataHistori.length > 20) dataHistori.shift();
-
-                        configChart.data.labels = dataHistori.map(item => item.timestamp.split(' ')[1] || item.timestamp);
-                        configChart.data.datasets[0].data = dataHistori.map(item => item.suhu);
-                        configChart.data.datasets[1].data = dataHistori.map(item => item.kelembapan);
-                        configChart.update();
-                        updateDashboardUI();
-                    }
+                    // Update Grafik langsung dengan seluruh titik data
+                    configChart.data.labels = dataHistori.map(item => item.timestamp);
+                    configChart.data.datasets[0].data = dataHistori.map(item => item.suhu);
+                    configChart.data.datasets[1].data = dataHistori.map(item => item.kelembapan);
+                    configChart.update();
+                    
+                    // Update Tabel
+                    updateDashboardUI();
                 }
             } catch (error) {
                 // Silent error
