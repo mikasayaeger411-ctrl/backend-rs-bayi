@@ -64,27 +64,16 @@ app.post('/api/sensor', async (req, res) => {
 // ===================================================================
 // 4. Endpoint untuk MENGIRIM data ke Website Dashboard (HTTP GET)
 // ===================================================================
+// Ganti bagian 4 di index.js kamu dengan ini:
 app.get('/api/get-sensor', async (req, res) => {
     try {
-        // Mengambil 1 data paling terbaru dari MongoDB (diurutkan berdasarkan waktu mundur)
-        const dataTerakhir = await Sensor.findOne().sort({ waktu_update: -1 });
+        // Ambil 15 data terakhir dari MongoDB, urutkan dari yang terbaru
+        const dataHistori = await Sensor.find().sort({ waktu_update: -1 }).limit(15);
         
-        if (dataTerakhir) {
-            // Menyesuaikan format JSON agar persis seperti variabel sementara milikmu sebelumnya
-            const responseData = {
-                suhu: dataTerakhir.suhu,
-                kelembapan: dataTerakhir.kelembapan,
-                ruangan: dataTerakhir.ruangan,
-                waktu_update: dataTerakhir.waktu_update.toLocaleString('id-ID')
-            };
-            res.status(200).json(responseData);
-        } else {
-            // Jika database masih kosong
-            res.status(200).json({ suhu: 0, kelembapan: 0, ruangan: "Ruang Bayi 1", waktu_update: "" });
-        }
+        // Balikkan urutannya agar data terlama di awal (untuk grafik)
+        res.status(200).json(dataHistori.reverse());
     } catch (error) {
-        console.error("Error membaca dari database:", error);
-        res.status(500).send({ message: "Gagal mengambil data dari database" });
+        res.status(500).send({ message: "Gagal mengambil data" });
     }
 });
 

@@ -277,38 +277,35 @@
             document.getElementById('liveHum').innerText = dataTerbaru.kelembapan;
         }
 
-        async function ambilDataDariServer() {
-            try {
-                // PASTIKAN IP INI SESUAI DENGAN LAPTOP KAMU
-                const response = await fetch('http://localhost:3000/api/get-sensor');
-                if (!response.ok) throw new Error("Gagal terhubung ke API");
-                const data = await response.json();
+        // Ganti fungsi ambilDataDariServer dengan ini:
+async function ambilDataDariServer() {
+    try {
+        const response = await fetch('http://localhost:3000/api/get-sensor');
+        const arrayData = await response.json();
 
-                if (data && data.suhu && data.suhu !== 0) {
-                    waktuTerakhirUpdate = Date.now();
-                    const isDataBaru = dataHistori.length === 0 || dataHistori[dataHistori.length - 1].timestamp !== data.waktu_update;
+        if (arrayData && arrayData.length > 0) {
+            waktuTerakhirUpdate = Date.now();
 
-                    if (isDataBaru) {
-                        dataHistori.push({
-                            timestamp: data.waktu_update || new Date().toLocaleTimeString(),
-                            ruangan: data.ruangan,
-                            suhu: parseFloat(data.suhu),
-                            kelembapan: parseFloat(data.kelembapan)
-                        });
+            // Masukkan data dari DB ke dalam variabel lokal kita
+            dataHistori = arrayData.map(item => ({
+                timestamp: new Date(item.waktu_update).toLocaleTimeString(),
+                ruangan: item.ruangan,
+                suhu: parseFloat(item.suhu),
+                kelembapan: parseFloat(item.kelembapan)
+            }));
 
-                        if (dataHistori.length > 20) dataHistori.shift();
-
-                        configChart.data.labels = dataHistori.map(item => item.timestamp.split(' ')[1] || item.timestamp);
-                        configChart.data.datasets[0].data = dataHistori.map(item => item.suhu);
-                        configChart.data.datasets[1].data = dataHistori.map(item => item.kelembapan);
-                        configChart.update();
-                        updateDashboardUI();
-                    }
-                }
-            } catch (error) {
-                // Silent error
-            }
+            // Update Grafik dengan 15 data sekaligus
+            configChart.data.labels = dataHistori.map(item => item.timestamp);
+            configChart.data.datasets[0].data = dataHistori.map(item => item.suhu);
+            configChart.data.datasets[1].data = dataHistori.map(item => item.kelembapan);
+            configChart.update();
+            
+            updateDashboardUI();
         }
+    } catch (error) {
+        console.error("Gagal update data:", error);
+    }
+}
 
         function cekStatusKoneksi() {
             const statusBadge = document.getElementById('espStatus');
