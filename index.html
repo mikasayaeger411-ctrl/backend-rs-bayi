@@ -280,7 +280,7 @@
         async function ambilDataDariServer() {
             try {
                 // PASTIKAN INI MENGGUNAKAN URL NETLIFY MILIKMU
-                const response = await fetch('https://NAMA-WEB-KAMU.netlify.app/.netlify/functions/api/get-sensor');
+                const response = await fetch('https://suhuruanganbayirumahsakit.netlify.app/.netlify/functions/api/get-sensor');
                 if (!response.ok) throw new Error("Gagal terhubung ke API");
                 
                 const arrayData = await response.json(); // Sekarang menerima Array 20 data
